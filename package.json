@@ -1,0 +1,68 @@
+{
+  "name": "@fastly/serve-grip-expressly",
+  "version": "0.1.0",
+  "author": "Fastly, Inc. <oss@fastly.com>",
+  "description": "Extension of js-serve-grip for Expressly",
+  "packageManager": "yarn@1.22.15",
+  "contributors": [
+    {
+      "name": "Katsuyuki Omuro",
+      "email": "komuro@fastly.com"
+    }
+  ],
+  "main": "./build/src/index.js",
+  "module": "./build/esm/index.js",
+  "files": [
+    "build/**/*",
+    "types/**/*"
+  ],
+  "types": "./build/src/index.d.ts",
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "yarn test && yarn lint && yarn build-package && yarn build-browser",
+    "build-package": "yarn build-package:clean && yarn build-package:compile",
+    "build-package:clean": "rimraf build",
+    "build-package:compile": "tsc --build tsconfig.json && tsc --build tsconfig.esm.json",
+    "format": "prettier --write \"src/**/*.{js,ts}\"",
+    "lint": "yarn lint:eslint",
+    "lint:eslint": "eslint src",
+    "test": "ts-mocha -p tsconfig.json \"tests/**/*.test.ts\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fastly/js-serve-grip-expressly.git"
+  },
+  "readmeFilename": "README.md",
+  "keywords": [
+    "grip",
+    "fanout",
+    "pushpin",
+    "realtime",
+    "push",
+    "publish",
+    "express",
+    "connect",
+    "nextjs"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/debug": "^4.1.5",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^14.6.0",
+    "@typescript-eslint/eslint-plugin": "^5.26.0",
+    "@typescript-eslint/parser": "^5.26.0",
+    "eslint": "^8.16.0",
+    "mocha": "^10.0.0",
+    "prettier": "^2.0.5",
+    "rimraf": "^3.0.2",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^4.7.2"
+  },
+  "dependencies": {
+    "@fanoutio/grip": "link:../js-grip",
+    "@fanoutio/serve-grip": "link:../js-serve-grip",
+    "@fastly/expressly": "link:../expressly",
+    "@fastly/grip-compute-js": "link:../js-grip-compute-js",
+    "debug": "^4.1.1"
+  }
+}
