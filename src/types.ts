@@ -1,10 +1,10 @@
-import { FPRequest, FPResponse } from "@fastly/expressly";
+import { ERequest, EResponse } from "@fastly/expressly";
 import { IRequestGrip, IResponseGrip } from "@fanoutio/serve-grip";
 
-export type GripExpresslyRequest = FPRequest & {
+export type GripExpresslyRequest = ERequest & {
   grip?: IRequestGrip;
 }
 
-export type GripExpresslyResponse = FPResponse & {
+export type GripExpresslyResponse = EResponse & {
   grip?: IResponseGrip;
 }

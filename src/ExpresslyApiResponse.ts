@@ -1,10 +1,10 @@
-import { FPResponse } from "@fastly/expressly";
+import { EResponse } from "@fastly/expressly";
 import { IApiResponse } from "@fanoutio/grip";
 
-export class ExpresslyApiResponse implements IApiResponse<FPResponse> {
-  static _map = new WeakMap<FPResponse, IApiResponse<FPResponse>>();
+export class ExpresslyApiResponse implements IApiResponse<EResponse> {
+  static _map = new WeakMap<EResponse, IApiResponse<EResponse>>();
 
-  static for(res: FPResponse): IApiResponse<FPResponse> {
+  static for(res: EResponse): IApiResponse<EResponse> {
     let apiResponse = this._map.get(res);
     if (apiResponse != null) {
       return apiResponse;
@@ -15,7 +15,7 @@ export class ExpresslyApiResponse implements IApiResponse<FPResponse> {
     return apiResponse;
   }
 
-  constructor(private _res: FPResponse) {}
+  constructor(private _res: EResponse) {}
   getWrapped() { return this._res; }
   setStatus(value: number) { this._res.status = value; }
   end(chunk: string) { this._res.end(chunk); }

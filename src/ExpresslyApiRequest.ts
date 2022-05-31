@@ -1,12 +1,12 @@
 import { Buffer } from 'buffer';
 
-import { FPRequest } from "@fastly/expressly";
+import { ERequest } from "@fastly/expressly";
 import { IApiRequest } from "@fanoutio/grip";
 
-export class ExpresslyApiRequest implements IApiRequest<FPRequest> {
-  static _map = new WeakMap<FPRequest, IApiRequest<FPRequest>>();
+export class ExpresslyApiRequest implements IApiRequest<ERequest> {
+  static _map = new WeakMap<ERequest, IApiRequest<ERequest>>();
 
-  static for(req: FPRequest): IApiRequest<FPRequest> {
+  static for(req: ERequest): IApiRequest<ERequest> {
     let apiRequest = this._map.get(req);
     if(apiRequest != null) {
       return apiRequest;
@@ -16,7 +16,7 @@ export class ExpresslyApiRequest implements IApiRequest<FPRequest> {
     return apiRequest;
   }
 
-  constructor(private _req: FPRequest) {}
+  constructor(private _req: ERequest) {}
   getWrapped() { return this._req; }
   getMethod() { return this._req.method; }
   getHeaderValue(key: string) { return this._req.headers.get(key) ?? undefined; }
