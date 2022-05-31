@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { FPRequest } from "@fastly/expressly";
 import { IApiRequest } from "@fanoutio/grip";
 
@@ -28,5 +30,7 @@ export class ExpresslyApiRequest implements IApiRequest<FPRequest> {
     }
     return headers;
   }
-  async getBody() { return await this._req.text(); }
+  async getBody() {
+    return Buffer.from(await this._req.arrayBuffer());
+  }
 }
