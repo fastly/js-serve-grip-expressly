@@ -19,7 +19,8 @@
   "types": "./build/src/index.d.ts",
   "scripts": {
     "prepublishOnly": "npm run build",
-    "build": "yarn test && yarn lint && yarn build-package && yarn build-browser",
+    "build-TEMPORARY_BACKUP": "yarn test && yarn lint && yarn build-package",
+    "build": "yarn build-package",
     "build-package": "yarn build-package:clean && yarn build-package:compile",
     "build-package:clean": "rimraf build",
     "build-package:compile": "tsc --build tsconfig.json && tsc --build tsconfig.esm.json",
