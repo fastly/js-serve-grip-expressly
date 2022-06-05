@@ -1,21 +1,18 @@
 # js-serve-grip-expressly
 
-Use js-serve-grip on Expressly.
+Use [@fanout/serve-grip](https://github.com/fanout/js-serve-grip) on [@fanout/expressly](https://github.com/fastly/expressly).
 
 ## Usage
 
-The following example posts to a Pushpin publisher at `http://localhost:5561/publish/`.
-Make sure you have set up a Backend on your service that can be accessed through that host name.
+The following example posts to a Fastly Fanout publisher represented by a `GRIP_URL`.
+Make sure you have set up a backend on your service named `grip-publisher` that can access the host name `fanout.fastly.com`.
 
 ```javascript
 import { Router } from "@fastly/expressly";
 import { ServeGrip } from "@fastly/serve-grip-expressly";
 
 const serveGrip = new ServeGrip({
-  grip: {
-    control_uri: 'http://localhost:5561/',
-    backend: 'grip-publisher',
-  }
+  grip: `https://fanout.fastly.com/<service-id>?iss=<service-id>&key=<api_token>&backend=grip-publisher`
 });
 
 const router = new Router();
@@ -53,7 +50,7 @@ router.listen();
 
 ## WS-over-HTTP
 
-The following examples uses WS-over-HTTP. Make sure Pushpin uses the `over_http` settting.
+The following examples uses WS-over-HTTP.
 
 ```javascript
 import { Router } from "@fastly/expressly";
@@ -61,10 +58,7 @@ import { ServeGrip } from "@fastly/serve-grip-expressly";
 import { WebSocketMessageFormat } from "@fanoutio/grip";
 
 const serveGrip = new ServeGrip({
-  grip: {
-    control_uri: 'http://localhost:5561/',
-    backend: 'grip-publisher',
-  }
+  grip: `https://fanout.fastly.com/<service-id>?iss=<service-id>&key=<api_token>&backend=grip-publisher`
 });
 
 const router = new Router();
@@ -101,3 +95,25 @@ router.post('/api/broadcast', async (req: GripExpresslyRequest, res: GripExpress
 
 router.listen();
 ```
+
+## Running Locally
+
+For local development, you can run this locally using `fastly compute serve`.
+
+In order to do this, you will need to run the open-source [Pushpin](https://pushpin.org) server to take
+the place of Fastly and the Publisher. 
+
+Use a constructor call such as the following:
+
+```javascript
+const serveGrip = new ServeGrip({
+  grip: {
+    control_uri: 'http://localhost:5561/',
+    backend: 'grip-publisher',
+  }
+});
+```
+
+And make sure that your `fastly.toml` file defines a backend named `grip-publisher` for `http://localhost:5561/`.
+
+Additionally, if you need the WebSocket-over-HTTP functionality, make sure Pushpin uses the `over_http` setting.
