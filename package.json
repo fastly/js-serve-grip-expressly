@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "author": "Fastly, Inc. <oss@fastly.com>",
   "description": "Extension of js-serve-grip for Expressly",
-  "packageManager": "yarn@1.22.15",
+  "packageManager": "pnpm@7.1.9",
   "contributors": [
     {
       "name": "Katsuyuki Omuro",
@@ -18,12 +18,12 @@
   ],
   "types": "./build/src/index.d.ts",
   "scripts": {
-    "prepublishOnly": "npm run build",
-    "build": "yarn lint && yarn build-package",
-    "build-package": "yarn build-package:clean && yarn build-package:compile",
+    "prepack": "pnpm run build",
+    "build": "pnpm lint && pnpm build-package",
+    "build-package": "pnpm build-package:clean && pnpm build-package:compile",
     "build-package:clean": "rimraf build",
     "build-package:compile": "tsc --build tsconfig.json && tsc --build tsconfig.esm.json",
-    "lint": "yarn lint:eslint",
+    "lint": "pnpm lint:eslint",
     "lint:eslint": "eslint src"
   },
   "repository": {
@@ -53,10 +53,10 @@
     "typescript": "^4.7.2"
   },
   "dependencies": {
-    "@fanoutio/grip": "link:../js-grip",
-    "@fanoutio/serve-grip": "link:../js-serve-grip",
-    "@fastly/expressly": "link:../expressly",
-    "@fastly/grip-compute-js": "link:../js-grip-compute-js",
+    "@fanoutio/grip": "3.1.0",
+    "@fanoutio/serve-grip": "1.2.0",
+    "@fastly/expressly": "1.0.0-alpha.1",
+    "@fastly/grip-compute-js": "0.1.0",
     "debug": "^4.1.1"
   }
 }
