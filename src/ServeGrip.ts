@@ -5,8 +5,8 @@ import {
   WebSocketContext
 } from "@fanoutio/grip";
 
-import { IGripApiRequest, IGripApiResponse, IRequestGrip, IResponseGrip, ServeGripBase } from "@fanoutio/serve-grip";
-
+import { ERequest, EResponse } from "@fastly/expressly";
+import { IGripApiRequest, IGripApiResponse, ServeGripBase } from "@fanoutio/serve-grip";
 import { Publisher } from "@fastly/grip-compute-js";
 
 import debug from './debug';
@@ -15,30 +15,34 @@ import { ExpresslyApiRequest } from "./ExpresslyApiRequest";
 import { ExpresslyApiResponse } from "./ExpresslyApiResponse";
 import { GripExpresslyRequest, GripExpresslyResponse } from "./types";
 
-export class ServeGrip extends ServeGripBase<GripExpresslyRequest, GripExpresslyResponse> {
-  platformRequestToApiRequest(req: GripExpresslyRequest): IGripApiRequest<GripExpresslyRequest> {
-    const apiRequest = ExpresslyApiRequest.for(req);
-    Object.defineProperty(apiRequest, 'grip', {
-      get(): IRequestGrip {
-        return this.getWrapped().grip;
-      },
-      set(value: IRequestGrip) {
-        this.getWrapped().grip = value;
-      }
-    });
-    return apiRequest as IGripApiRequest<GripExpresslyRequest>;
+export class ServeGrip extends ServeGripBase<ERequest, EResponse> {
+  platformRequestToApiRequest(req: ERequest): IGripApiRequest<ERequest> {
+    const apiRequest = ExpresslyApiRequest.for(req) as IGripApiRequest<ERequest>;
+    if(apiRequest.getGrip == null) {
+      apiRequest.getGrip = () => {
+        return (req as GripExpresslyRequest).grip;
+      };
+    }
+    if(apiRequest.setGrip == null) {
+      apiRequest.setGrip = (grip) => {
+        (req as GripExpresslyRequest).grip = grip;
+      };
+    }
+    return apiRequest;
   }
-  platformResponseToApiResponse(res: GripExpresslyResponse): IGripApiResponse<GripExpresslyResponse> {
-    const apiResponse = ExpresslyApiResponse.for(res);
-    Object.defineProperty(apiResponse, 'grip', {
-      get(): IResponseGrip {
-        return this.getWrapped().grip;
-      },
-      set(value: IResponseGrip) {
-        this.getWrapped().grip = value;
-      }
-    });
-    return apiResponse as IGripApiResponse<GripExpresslyResponse>;
+  platformResponseToApiResponse(res: EResponse): IGripApiResponse<EResponse> {
+    const apiResponse = ExpresslyApiResponse.for(res) as IGripApiResponse<EResponse>;
+    if(apiResponse.getGrip == null) {
+      apiResponse.getGrip = () => {
+        return (res as GripExpresslyResponse).grip;
+      };
+    }
+    if(apiResponse.setGrip == null) {
+      apiResponse.setGrip = (grip) => {
+        (res as GripExpresslyResponse).grip = grip;
+      };
+    }
+    return apiResponse;
   }
 
   constructor(config?: IServeGripConfig) {
@@ -54,7 +58,6 @@ export class ServeGrip extends ServeGripBase<GripExpresslyRequest, GripExpressly
 
     debug('res.removeHeader');
     const resRemoveHeader = res.removeHeader;
-    // @ts-ignore
     res.removeHeader = (name) => {
       debug('res.removeHeader - start');
       // If we have a WsContext, then we don't want to allow removing
@@ -81,7 +84,6 @@ export class ServeGrip extends ServeGripBase<GripExpresslyRequest, GripExpressly
 
     debug('res.setDefaults');
     const resSetDefaults = res.setDefaults;
-    // @ts-ignore
     res.setDefaults = () => {
       debug('res.setDefaults - start');
 
@@ -91,7 +93,7 @@ export class ServeGrip extends ServeGripBase<GripExpresslyRequest, GripExpressly
 
       if (res.status === 200 || res.status === 204) {
         debug('Getting outgoing events' );
-        const events = wsContext!.getOutgoingEvents();
+        const events = wsContext.getOutgoingEvents();
         debug('Encoding and writing events', events );
         const eventsAsText = encodeWebSocketEvents(events);
         (res as any)._body = eventsAsText;
@@ -118,11 +120,9 @@ export class ServeGrip extends ServeGripBase<GripExpresslyRequest, GripExpressly
 
       debug('res.setDefaults - end');
     };
-
   }
 
-
-  override monkeyPatchResMethodsForGripInstruct(apiResponse: IGripApiResponse<GripExpresslyResponse>, gripInstructGetter: () => GripInstruct | null) {
+  override monkeyPatchResMethodsForGripInstruct(apiResponse: IGripApiResponse<EResponse>, gripInstructGetter: () => GripInstruct | null) {
 
     const res = apiResponse.getWrapped();
 

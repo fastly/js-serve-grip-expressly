@@ -1,10 +1,5 @@
 import { ERequest, EResponse } from "@fastly/expressly";
-import { IRequestGrip, IResponseGrip } from "@fanoutio/serve-grip";
+import { GripRequest, GripResponse } from "@fanoutio/serve-grip";
 
-export type GripExpresslyRequest = ERequest & {
-  grip?: IRequestGrip;
-}
-
-export type GripExpresslyResponse = EResponse & {
-  grip?: IResponseGrip;
-}
+export type GripExpresslyRequest = GripRequest<ERequest>;
+export type GripExpresslyResponse = GripResponse<EResponse>;
