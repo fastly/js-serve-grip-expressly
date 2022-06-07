@@ -1,3 +1,8 @@
+/*
+ * Copyright Fastly, Inc.
+ * Licensed under the MIT license. See LICENSE file for details.
+ */
+
 import { IGripConfig } from "@fastly/grip-compute-js";
 import { IServeGripConfig as IBaseServeGripConfig } from "@fanoutio/serve-grip";
 import { PublisherBase } from "@fanoutio/grip";

@@ -1,3 +1,8 @@
+/*
+ * Copyright Fastly, Inc.
+ * Licensed under the MIT license. See LICENSE file for details.
+ */
+
 import { Buffer } from 'buffer';
 
 import { ERequest } from "@fastly/expressly";
