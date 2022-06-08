@@ -55,6 +55,7 @@
     "@fanoutio/serve-grip": "^1.2.0",
     "@fastly/expressly": "^1.0.0-alpha.1",
     "@fastly/grip-compute-js": "^0.1.0",
-    "debug": "^4.1.1"
+    "debug": "^4.1.1",
+    "patch-obj-prop": "^1.0.0"
   }
 }

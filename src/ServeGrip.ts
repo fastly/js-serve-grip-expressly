@@ -2,6 +2,7 @@
  * Copyright Fastly, Inc.
  * Licensed under the MIT license. See LICENSE file for details.
  */
+import { monkeyPatchProp } from "patch-obj-prop";
 
 import {
   Channel,
@@ -61,10 +62,12 @@ export class ServeGrip extends ServeGripBase<ERequest, EResponse> {
   override monkeyPatchResMethodsForWebSocket(apiResponse: IGripApiResponse<GripExpresslyResponse>, wsContext: WebSocketContext) {
     const res = apiResponse.getWrapped();
 
-    debug('res.removeHeader');
-    const resRemoveHeader = res.removeHeader;
-    res.removeHeader = (name) => {
-      debug('res.removeHeader - start');
+    const resHeaders = res.headers;
+
+    debug('res.headers.delete');
+    const origResHeadersDelete = resHeaders.delete;
+    resHeaders.delete = (name) => {
+      debug('res.headers.delete - start');
       // If we have a WsContext, then we don't want to allow removing
       // the following headers.
       let skip = false;
@@ -79,98 +82,121 @@ export class ServeGrip extends ServeGripBase<ERequest, EResponse> {
         }
       }
       if (!skip) {
-        debug('not skipping removeHeader', name);
-        resRemoveHeader.call(res, name);
+        debug('not skipping headers.delete', name);
+        origResHeadersDelete.call(resHeaders, name);
       } else {
-        debug('skipping removeHeader', name);
+        debug('skipping headers.delete', name);
       }
-      debug('res.removeHeader - end');
+      debug('res.headers.delete - end');
     };
 
-    debug('res.setDefaults');
-    const resSetDefaults = res.setDefaults;
-    res.setDefaults = () => {
-      debug('res.setDefaults - start');
+    debug('res.hasEnded');
+    monkeyPatchProp(res, 'hasEnded', {
+      set: (value: boolean, origSetter) => {
+        if(res.hasEnded) {
+          debug('res.hasEnded is already true');
+          origSetter(value);
+          return;
+        }
+        if(!value) {
+          debug('res.hasEnded called with false');
+          origSetter(value);
+          return;
+        }
+        debug('res.hasEnded set() - start');
 
-      debug('res.setDefaults - original start');
-      resSetDefaults.call(res);
-      debug('res.setDefaults - original end');
+        debug('res.hasEnded set() - original start');
+        origSetter(value);
+        debug('res.hasEnded set() - original end');
 
-      if (res.status === 200 || res.status === 204) {
-        debug('Getting outgoing events' );
-        const events = wsContext.getOutgoingEvents();
-        debug('Encoding and writing events', events );
-        const eventsAsText = encodeWebSocketEvents(events);
-        (res as any)._body = eventsAsText;
-        debug('Encoding and writing events', eventsAsText );
-      }
-
-      debug('res.setDefaults - res.status', res.status);
-
-      if (res.status === 200 || res.status === 204) {
-        const wsContextHeaders = wsContext.toHeaders();
-        debug("Adding wsContext headers", wsContextHeaders);
-        for(const [key, value] of Object.entries(wsContextHeaders)) {
-          res._headers.set(key, value);
+        if (res.status === 200 || res.status === 204) {
+          debug('Getting outgoing events' );
+          const events = wsContext.getOutgoingEvents();
+          // debug('Encoding and writing events', events);
+          const eventsAsText = encodeWebSocketEvents(events);
+          res.body = eventsAsText;
+          // debug('Encoding and writing events', eventsAsText);
         }
 
-        // If the body is empty, it's customary to set the code to
-        // 204. This is probably fine since the main stream
-        // for WS-over-HTTP is supposed to have an empty
-        // body anyway. However, we will be adding WebSocket
-        // events into the body, so change it to a 200.
-        res.status = 200;
-        // reason = 'OK'; // C@E doesn't have reason codes
-      }
+        debug('res.hasEnded set() - res.status', res.status);
 
-      debug('res.setDefaults - end');
-    };
+        if (res.status === 200 || res.status === 204) {
+          const wsContextHeaders = wsContext.toHeaders();
+          debug("Adding wsContext headers", wsContextHeaders);
+          for(const [key, value] of Object.entries(wsContextHeaders)) {
+            res.set(key, value);
+          }
+
+          // If the body is empty, it's customary to set the code to
+          // 204. This is probably fine since the main stream
+          // for WS-over-HTTP is supposed to have an empty
+          // body anyway. However, we will be adding WebSocket
+          // events into the body, so change it to a 200.
+          res.status = 200;
+          // reason = 'OK'; // C@E doesn't have reason codes
+        }
+
+        debug('res.hasEnded set() - end');
+      }
+    });
   }
 
   override monkeyPatchResMethodsForGripInstruct(apiResponse: IGripApiResponse<EResponse>, gripInstructGetter: () => GripInstruct | null) {
 
     const res = apiResponse.getWrapped();
 
-    debug('res.setDefaults');
-    const resSetDefaults = res.setDefaults;
-    res.setDefaults = () => {
-      debug('res.setDefaults - start');
+    debug('res.hasEnded');
 
-      debug('res.setDefaults - original start');
-      resSetDefaults.call(res);
-      debug('res.setDefaults - original end');
-
-      debug('res.setDefaults - res.status', res.status);
-
-      const gripInstruct = gripInstructGetter();
-      if(gripInstruct != null) {
-        debug("GripInstruct present");
-        if (res.status === 304) {
-          // Code 304 only allows certain headers.
-          // Some web servers strictly enforce this.
-          // In that case we won't be able to use
-          // Grip-headers to talk to the proxy.
-          // Switch to code 200 and use Grip-Status
-          // to specify intended status.
-          debug("Using gripInstruct setStatus header to handle 304");
-          res.status = 200;
-          // reason = 'OK'; // C@E doesn't have reason codes
-          gripInstruct.setStatus(304);
+    monkeyPatchProp(res, 'hasEnded', {
+      set: (value: boolean, origSetter) => {
+        if(res.hasEnded) {
+          debug('res.hasEnded is already true');
+          origSetter(value);
+          return;
         }
-        // Apply prefix to channel names
-        gripInstruct.channels = gripInstruct.channels.map(
-          (ch) => new Channel(this.prefix + ch.name, ch.prevId),
-        );
-        const gripInstructHeaders = gripInstruct.toHeaders();
-        debug("Adding GripInstruct headers", gripInstructHeaders);
-        for(const [key, value] of Object.entries(gripInstructHeaders)) {
-          res._headers.set(key, value);
+        if(!value) {
+          debug('res.hasEnded called with false');
+          origSetter(value);
+          return;
         }
-      } else {
-        debug("GripInstruct not present");
+        debug('res.hasEnded set() - start');
+
+        debug('res.hasEnded set() - original start');
+        origSetter(value);
+        debug('res.hasEnded set() - original end');
+
+        debug('res.hasEnded set() - res.status', res.status);
+
+        const gripInstruct = gripInstructGetter();
+        if(gripInstruct != null) {
+          debug("GripInstruct present");
+          if (res.status === 304) {
+            // Code 304 only allows certain headers.
+            // Some web servers strictly enforce this.
+            // In that case we won't be able to use
+            // Grip-headers to talk to the proxy.
+            // Switch to code 200 and use Grip-Status
+            // to specify intended status.
+            debug("Using gripInstruct setStatus header to handle 304");
+            res.status = 200;
+            // reason = 'OK'; // C@E doesn't have reason codes
+            gripInstruct.setStatus(304);
+          }
+          // Apply prefix to channel names
+          gripInstruct.channels = gripInstruct.channels.map(
+            (ch) => new Channel(this.prefix + ch.name, ch.prevId),
+          );
+          const gripInstructHeaders = gripInstruct.toHeaders();
+          debug("Adding GripInstruct headers", gripInstructHeaders);
+          for(const [key, value] of Object.entries(gripInstructHeaders)) {
+            res.set(key, value);
+          }
+        } else {
+          debug("GripInstruct not present");
+        }
+
+        debug('res.hasEnded set() - end');
       }
-
-      debug('res.setDefaults - end');
-    }
+    });
   }
 }
