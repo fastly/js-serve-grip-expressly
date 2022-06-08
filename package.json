@@ -53,7 +53,7 @@
   "dependencies": {
     "@fanoutio/grip": "^3.1.0",
     "@fanoutio/serve-grip": "^1.2.0",
-    "@fastly/expressly": "^1.0.0-alpha.1",
+    "@fastly/expressly": "1.0.0-alpha.1",
     "@fastly/grip-compute-js": "^0.1.0",
     "debug": "^4.1.1"
   }
