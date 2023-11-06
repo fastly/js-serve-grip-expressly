@@ -3,7 +3,6 @@
   "version": "0.1.1",
   "author": "Fastly, Inc. <oss@fastly.com>",
   "description": "Extension of js-serve-grip for Expressly",
-  "packageManager": "pnpm@7.1.9",
   "contributors": [
     {
       "name": "Katsuyuki Omuro",
