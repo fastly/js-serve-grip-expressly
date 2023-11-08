@@ -1,6 +1,6 @@
 # js-serve-grip-expressly
 
-Use [@fanout/serve-grip](https://github.com/fanout/js-serve-grip) on [@fanout/expressly](https://github.com/fastly/expressly).
+Use [@fanout/serve-grip](https://github.com/fanout/js-serve-grip) with [@fastly/expressly](https://github.com/fastly/expressly).
 
 ## Usage
 
